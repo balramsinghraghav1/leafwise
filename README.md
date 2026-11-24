@@ -1,4 +1,4 @@
-# Leafwise: Image-Based Plant Disease Detection (Group G176)
+# Leafwise: Image-Based Plant Disease Detection 
 
 Website: landing page, register / login, leaf detection (GoogLeNet trained on PlantVillage), per-user scan history in MongoDB Atlas, disease guide and printable reports.
 
