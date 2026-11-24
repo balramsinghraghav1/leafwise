@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Report · {{ s.crop }} · Leafwise{% endblock %}
+{% block content %}
+<section class="wrap page report">
+  <p class="noprint"><a href="{{ url_for('history') }}">← Back to history</a></p>
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Leaf report</p>
+      <h1>{{ s.crop }}{% if not s.healthy %} · {{ s.disease }}{% else %} · healthy{% endif %}</h1>
+      <p class="muted">Scanned <time data-local datetime="{{ s.created_at }}">{{ s.created_at[:10] }}</time>{% if s.crop_given %} · crop chosen by you{% endif %}</p>
+    </div>
+    <button class="btn ghost noprint" type="button" onclick="window.print()">Print report</button>
+  </div>
+  <div class="report-grid">
+    <div>{% if s.image %}<img class="photo" src="data:image/jpeg;base64,{{ s.image }}" alt="The scanned leaf">{% endif %}</div>
+    <div class="card">
+      <p><span class="tag {{ 'ok' if s.healthy else 'bad' }}">{{ 'Healthy' if s.healthy else 'Problem found' }}</span>
+        {% if advice %}<span class="tag soft">{{ advice.cause_label }}</span>{% endif %}</p>
+      <p class="big">{{ '%.1f' % (s.confidence * 100) }}% confident</p>
+      {% if advice %}
+        <p>{{ advice.about }}</p>
+        <h3>What you can do</h3>
+        <ul class="actions">{% for a in advice.actions %}<li>{{ a }}</li>{% endfor %}</ul>
+      {% endif %}
+      <h3>Top 5 possibilities</h3>
+      <ol class="bars">
+        {% for t in s.top %}
+        <li><div class="row"><span>{{ t.crop }} · {{ t.disease }}</span><span>{{ '%.1f' % (t.confidence * 100) }}%</span></div>
+          <div class="track"><div class="fill" style="width: {{ '%.1f' % (t.confidence * 100) }}%"></div></div></li>
+        {% endfor %}
+      </ol>
+      <p class="small muted">This is a screening aid based on one photo. For serious outbreaks, check with your local agriculture office.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

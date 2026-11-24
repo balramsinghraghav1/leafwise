@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Check a leaf · Leafwise{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <h1>Check a leaf</h1>
+  <p class="lede">Add one clear photo of a single leaf. The result takes about a second.</p>
+  {% if not model_ready %}<p class="flash error" role="alert">{{ model_error }}</p>{% endif %}
+
+  <div class="detect-grid">
+    <form id="form" class="card" novalidate>
+      <label id="drop" class="drop" for="file" tabindex="0">
+        <img id="preview" alt="Preview of the selected leaf" hidden>
+        <span id="drop-text"><strong>Drop a photo here</strong> or click to choose one<br><small>JPG, PNG, WEBP · up to 8 MB</small></span>
+      </label>
+      <input type="file" id="file" accept="image/*" hidden>
+      <input type="file" id="camera" accept="image/*" capture="environment" hidden>
+      <div class="row-btns">
+        <button type="button" id="camera-btn" class="btn ghost sm">Take a photo</button>
+        <button type="button" id="reset" class="btn ghost sm" hidden>Clear</button>
+      </div>
+      <label class="field">Which crop is it? <small>(optional, makes it more accurate)</small>
+        <select id="crop">
+          <option value="">I’m not sure, detect it</option>
+          {% for c in crops %}<option value="{{ c.value }}">{{ c.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit" id="go" class="btn full" disabled>Analyse leaf</button>
+      <p id="form-error" class="flash error" role="alert" hidden></p>
+      <ul class="tips">
+        <li>One leaf, filling most of the frame</li>
+        <li>Plain background (paper or a flat surface)</li>
+        <li>Daylight, no harsh shadows, in focus</li>
+        <li>Include the spotted area if there is one</li>
+      </ul>
+    </form>
+
+    <div class="card result" aria-live="polite">
+      <p id="empty" class="muted">Your result will show up here.</p>
+      <div id="out" hidden>
+        <p><span class="tag" id="tag"></span> <span class="tag soft" id="cause"></span></p>
+        <h2 id="disease"></h2>
+        <p class="muted" id="crop-line"></p>
+        <p class="flash warn" id="low" hidden>I’m not very sure about this one. Try a closer photo on a plain background, or choose the crop above.</p>
+        <p id="about"></p>
+        <h3>What you can do</h3>
+        <ul id="actions" class="actions"></ul>
+        <h3>Top 5 possibilities</h3>
+        <ol id="bars" class="bars"></ol>
+        <p class="small muted" id="meta"></p>
+        <p id="note" class="flash warn" hidden></p>
+        <p><a id="report" class="btn ghost sm" href="#" hidden>Open full report</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script>window.MODEL_READY = {{ 'true' if model_ready else 'false' }};</script>
+<script src="{{ url_for('static', filename='detect.js') }}"></script>{% endblock %}

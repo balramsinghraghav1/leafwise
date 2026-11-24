@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Your history · Leafwise{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <div class="page-head">
+    <div><h1>Your history</h1><p class="lede">Every leaf you have checked, newest first.</p></div>
+    <a class="btn" href="{{ url_for('detect') }}">Check another leaf</a>
+  </div>
+  {% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
+  {% if summary %}
+  <div class="summary">
+    <div><b>{{ summary.total }}</b><span>scans</span></div>
+    <div><b>{{ summary.healthy }}</b><span>healthy</span></div>
+    <div><b>{{ summary.diseased }}</b><span>with a problem</span></div>
+    <div><b class="txt">{{ summary.common or '—' }}</b><span>most frequent problem</span></div>
+  </div>
+  {% endif %}
+  {% if scans %}
+  <div class="toolbar">
+    <div class="chips" role="group" aria-label="Filter scans">
+      <button type="button" class="chip on" data-filter="all">All</button>
+      <button type="button" class="chip" data-filter="healthy">Healthy</button>
+      <button type="button" class="chip" data-filter="sick">With a problem</button>
+    </div>
+    <form method="post" action="{{ url_for('clear_history') }}" data-confirm="Delete all your saved scans? This can’t be undone.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn danger sm" type="submit">Clear all</button>
+    </form>
+  </div>
+  <ul class="scans">
+    {% for s in scans %}
+    <li class="scan-card" data-kind="{{ 'healthy' if s.healthy else 'sick' }}">
+      <a href="{{ url_for('scan', scan_id=s.id) }}">
+        {% if s.image %}<img src="data:image/jpeg;base64,{{ s.image }}" alt="Leaf scanned on {{ s.created_at[:10] }}" loading="lazy">{% else %}<div class="noimg"></div>{% endif %}
+        <div class="body">
+          <span class="tag {{ 'ok' if s.healthy else 'bad' }}">{{ 'Healthy' if s.healthy else 'Problem found' }}</span>
+          <strong>{{ s.crop }}{% if not s.healthy %} · {{ s.disease }}{% endif %}</strong>
+          <span class="small muted">{{ '%.0f' % (s.confidence * 100) }}% sure · <time data-local datetime="{{ s.created_at }}">{{ s.created_at[:10] }}</time></span>
+        </div>
+      </a>
+      <form method="post" action="{{ url_for('delete_scan', scan_id=s.id) }}" data-confirm="Delete this scan?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="linkbtn" type="submit">Delete</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  <p id="none-match" class="muted" hidden>No scans match this filter.</p>
+  {% elif not error %}
+  <div class="card empty-state"><h2>Nothing here yet</h2><p>Your scans will appear here after you check your first leaf.</p><a class="btn" href="{{ url_for('detect') }}">Check a leaf</a></div>
+  {% endif %}
+</section>
+{% endblock %}

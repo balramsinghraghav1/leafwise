@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero wrap">
+  <div class="hero-text">
+    <!-- <p class="eyebrow">Final-year project · GLA University, Mathura</p> -->
+    <h1>Is that leaf sick? Take a photo and find out.</h1>
+    <p class="lede">Leafwise looks at a single leaf and tells you which crop it is, whether it is healthy and, if not, what is most likely wrong, with plain steps for what to do next.</p>
+    <div class="hero-cta">
+      <a class="btn" href="{{ url_for('detect') }}">Check a leaf</a>
+      <a class="btn ghost" href="#how">See how it works</a>
+    </div>
+    <p class="small muted">Free to use · works with your phone camera · {{ stats.crops }} crops covered</p>
+  </div>
+  <figure class="plate" aria-label="Illustration of a leaf with a diseased spot">
+    <svg viewBox="0 0 440 400" role="img" aria-label="Sketch of a leaf with labelled lesion">
+      <path d="M70 340C40 190 150 55 380 40 390 210 290 335 70 340Z" fill="#cfdcc3" stroke="#1d2a22" stroke-width="2"/>
+      <path d="M70 340C160 235 270 130 380 40" fill="none" stroke="#1d2a22" stroke-width="2"/>
+      <g fill="none" stroke="#1d2a22" stroke-width="1.2" opacity=".55">
+        <path d="M130 280c20-25 45-30 70-30M180 235c20-25 45-30 70-30M235 185c18-20 40-27 62-28M115 262c25 4 45 20 55 42M165 215c25 6 45 22 55 45M225 165c22 6 40 20 50 40"/>
+      </g>
+      <circle cx="250" cy="228" r="17" fill="#b4532a" opacity=".85"/><circle cx="205" cy="270" r="9" fill="#b4532a" opacity=".8"/><circle cx="300" cy="120" r="8" fill="#b4532a" opacity=".75"/>
+      <g stroke="#1d2a22" stroke-width="1" fill="none"><path d="M262 238 L330 300 L395 300"/><path d="M200 168 L120 110 L58 110"/></g>
+      <g font-family="Public Sans, sans-serif" font-size="14" fill="#1d2a22"><text x="338" y="294">Lesion</text><text x="20" y="104">Healthy tissue</text></g>
+    </svg>
+    <figcaption>Fig. 1 · What the model looks for: spots, rings, mould and colour changes.</figcaption>
+  </figure>
+</section>
+
+<section class="strip">
+  <div class="wrap strip-in">
+    <div><b>54,305</b><span>leaf images studied</span></div>
+    <div><b>{{ stats.crops }}</b><span>crops</span></div>
+    <div><b>{{ stats.diseases }}</b><span>diseases &amp; pests</span></div>
+    <div><b>{{ stats.classes }}</b><span>classes incl. healthy</span></div>
+    <div><b>99.67%</b><span>accuracy on unseen test leaves</span></div>
+  </div>
+</section>
+
+<section class="wrap block" id="how">
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><span class="num">1</span><h3>Make a free account</h3><p>So your scans are saved privately to your own history.</p></li>
+    <li><span class="num">2</span><h3>Photograph one leaf</h3><p>Plain background, daylight, leaf filling most of the frame. Or pick a photo you already have.</p></li>
+    <li><span class="num">3</span><h3>Read the result</h3><p>You get the crop, the likely problem, the model’s confidence, its top five guesses and what to do about it.</p></li>
+  </ol>
+</section>
+
+<section class="wrap block" id="plants">
+  <div class="block-head">
+    <h2>What it can recognise</h2>
+    <p>{{ stats.crops }} crops, {{ stats.diseases }} diseases and pests, and healthy leaves for most crops. That makes {{ stats.classes }} classes in total. Tap a name to read about it in the guide.</p>
+  </div>
+  <div class="plates">
+    {% for c in crops %}
+    <article class="crop">
+      <header><span class="no">{{ '%02d' % loop.index }}</span><h3>{{ c.name }}</h3></header>
+      <ul>
+        {% for i in c['items'] %}{% if not i.healthy %}<li><a href="{{ url_for('guide') }}#{{ c.slug }}">{{ i.disease }}</a></li>{% endif %}{% endfor %}
+      </ul>
+      {% if c['items'] | selectattr('healthy') | list %}<p class="ok-tag">+ healthy leaf</p>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="wrap block split" id="about">
+  <div>
+    <h2>How it was built</h2>
+    <p>Leafwise uses a convolutional neural network, <strong>GoogLeNet</strong>, that was first trained on millions of everyday photos (ImageNet) and then fine-tuned on the <strong>PlantVillage</strong> dataset. That second step is called transfer learning, and it is why a small student project can reach high accuracy.</p>
+    <p>Photos were resized to 256 × 256 pixels and randomly flipped, rotated and brightness-shifted while training, so the model copes with different angles and lighting. We kept all photos of the same leaf together in either the training set or the test set, so the test score isn’t inflated by the model seeing the same leaf twice.</p>
+    <div class="links-row">
+      <a class="btn" href="https://github.com/spMohanty/PlantVillage-Dataset" target="_blank" rel="noopener noreferrer">View the dataset on GitHub</a>
+      <!-- <a class="btn ghost" href="https://doi.org/10.3389/fpls.2016.01419" target="_blank" rel="noopener noreferrer">Read the base paper</a> -->
+    </div>
+  </div>
+  <div>
+    <table class="facts">
+      <caption>Our results on 10,861 test leaves the model never saw</caption>
+      <tr><th>Test accuracy</th><td>99.67%</td></tr>
+      <tr><th>Top-5 accuracy</th><td>100%</td></tr>
+      <tr><th>Macro F1-score</th><td>99.51%</td></tr>
+      <tr><th>ROC-AUC (macro)</th><td>0.9999</td></tr>
+      <tr><th>Training time</th><td>22 min on a free GPU</td></tr>
+    </table>
+    <aside class="honest">
+      <h3>Where it can struggle</h3>
+      <p>PlantVillage photos were taken indoors on a plain background. Real field photos, with soil, shadows and other leaves behind, are harder, so expect lower confidence there. Photograph one leaf against a plain surface for the best results.</p>
+    </aside>
+  </div>
+</section>
+
+<section class="wrap block">
+  <h2>Also in Leafwise</h2>
+  <div class="feats">
+    <div><h3>Crop-given mode</h3><p>Already know the crop? Pick it and the model only chooses between that crop’s conditions.</p></div>
+    <div><h3>Disease guide</h3><p>What each disease is, what causes it, and what you can do. Searchable and free to read, even without an account.</p></div>
+    <div><h3>History &amp; reports</h3><p>Every scan is saved with its photo. Open one to see the full report and print it.</p></div>
+    <div><h3>Camera ready</h3><p>On a phone, “Take a photo” opens the camera directly, so you can scan in the field.</p></div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap cta-in">
+    <h2>Got a leaf you’re worried about?</h2>
+    <a class="btn light" href="{{ url_for('detect') }}">Check a leaf now</a>
+  </div>
+</section>
+{% endblock %}
